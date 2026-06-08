@@ -19,6 +19,7 @@ interface ChatApiResponse {
   };
   markdown?: string;
   mapUrl?: string;
+  mapHtml?: string;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_MARINE_API_URL || "http://127.0.0.1:8000";
@@ -48,10 +49,6 @@ export default function TrackShipPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
-
-  useEffect(() => {
-    setMapUrl(mapType === 'route' ? '/maps/route.html' : '/maps/massive_route.html');
-  }, [mapType]);
 
   const getTimestamp = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -99,8 +96,21 @@ export default function TrackShipPage() {
         },
       ]);
 
-      if (data.mapUrl) {
-        setMapUrl(data.mapUrl);
+      if (data.mapHtml) {
+        try {
+          await fetch('/api/save-map', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ html: data.mapHtml })
+          });
+          setMapUrl(`/maps/route.html?v=${Date.now()}`);
+          setMapType('route');
+        } catch (err) {
+          console.error("Failed to save dynamic map HTML:", err);
+        }
+      } else if (data.mapUrl) {
+        const relativeUrl = data.mapUrl.startsWith('/') ? data.mapUrl : `/${data.mapUrl}`;
+        setMapUrl(relativeUrl);
         setMapType(data.mapUrl.includes('massive') ? 'massive_route' : 'route');
       }
     } catch {
@@ -148,7 +158,10 @@ export default function TrackShipPage() {
               </div>
               <div className="flex bg-slate-850 p-1 rounded-lg border border-slate-800">
                 <button
-                  onClick={() => setMapType('route')}
+                  onClick={() => {
+                    setMapType('route');
+                    setMapUrl('/maps/route.html');
+                  }}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     mapType === 'route'
                       ? 'bg-blue-600 text-white shadow-lg'
@@ -158,7 +171,10 @@ export default function TrackShipPage() {
                   Standard Route
                 </button>
                 <button
-                  onClick={() => setMapType('massive_route')}
+                  onClick={() => {
+                    setMapType('massive_route');
+                    setMapUrl('/maps/massive_route.html');
+                  }}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     mapType === 'massive_route'
                       ? 'bg-blue-600 text-white shadow-lg'
