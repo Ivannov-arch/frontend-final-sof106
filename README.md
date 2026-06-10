@@ -1,109 +1,142 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# 🚢 Marine Navigation Assistant - Panduan Setup & Penggunaan (Frontend)
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+Selamat datang! Panduan ini dirancang khusus untuk membantu Anda yang **tidak memiliki latar belakang pemrograman (non-programmer)** untuk menjalankan dan menggunakan aplikasi web **Marine Navigation Assistant** di komputer lokal Anda.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+---
 
-## Features
+## 📋 Daftar Isi
+1. [Prasyarat: Apa yang Perlu Diinstal?](#1-prasyarat-apa-yang-perlu-diinstal)
+2. [Langkah 1: Mengunduh & Memasang Node.js](#langkah-2-mengunduh--memasang-nodejs)
+3. [Langkah 2: Menyiapkan File Konfigurasi (.env.local)](#langkah-3-menyiapkan-file-konfigurasi-envlocal)
+4. [Langkah 3: Menginstal Paket Pendukung](#langkah-4-menginstal-paket-pendukung)
+5. [Langkah 4: Menjalankan Aplikasi](#langkah-5-menjalankan-aplikasi)
+6. [🗺️ Cara Penggunaan Fitur Utama](#-cara-penggunaan-fitur-utama)
+7. [⚠️ Penyelesaian Masalah (Troubleshooting)](#%EF%B8%8F-penyelesaian-masalah-troubleshooting)
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+---
 
-## Demo
+## 1. Prasyarat: Apa yang Perlu Diinstal?
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+Sebelum menjalankan aplikasi, pastikan komputer Anda memiliki:
+* **Node.js** (Minimal versi 18.0 atau lebih baru) - Ini adalah motor utama yang menjalankan server frontend di komputer Anda.
+* **Terminal / Command Prompt** - Aplikasi bawaan komputer untuk mengetik perintah ringkas.
+  * Di **Windows**: Gunakan **Command Prompt (CMD)** atau **PowerShell**.
+  * Di **macOS / Linux**: Gunakan **Terminal**.
 
-## Deploy to Vercel
+---
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## Langkah 1: Mengunduh & Memasang Node.js
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+Jika Anda belum menginstal Node.js pada komputer Anda, ikuti langkah berikut:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+1. Buka browser (Chrome/Edge/Safari) dan kunjungi situs resmi: [https://nodejs.org/](https://nodejs.org/)
+2. Unduh versi **LTS (Long Term Support)** yang direkomendasikan untuk sebagian besar pengguna karena paling stabil.
+3. Buka file hasil unduhan tersebut dan ikuti petunjuk instalasi sampai selesai (klik *Next* / *Continue* / *Pasang* hingga selesai).
+4. Untuk memastikan Node.js sudah terpasang dengan benar:
+   * Buka **Command Prompt (Windows)** atau **Terminal (Mac)**.
+   * Ketik perintah berikut lalu tekan **Enter**:
+     ```bash
+     node -v
+     ```
+   * Jika muncul angka versi (misalnya `v20.11.0`), berarti Node.js telah berhasil diinstal dan siap digunakan!
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+---
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+## Langkah 2: Menyiapkan File Konfigurasi (.env.local)
 
-## Clone and run locally
+Aplikasi memerlukan beberapa kunci pengaturan (kredensial) agar dapat terhubung dengan database Supabase dan server kecerdasan buatan (FastAPI) di backend.
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+1. Buka folder **`frontend`** melalui File Explorer (Windows) atau Finder (Mac) Anda.
+2. Cari file bernama **`.env.example`**.
+3. **Salin (Copy)** file tersebut, lalu **Tempel (Paste)** di folder yang sama sehingga menghasilkan file duplikat.
+4. Ubah nama file salinan tersebut menjadi **`.env.local`** (pastikan tanda titik di awal nama file tetap ada).
+5. Buka file **`.env.local`** menggunakan aplikasi **Notepad**, **TextEdit**, atau editor teks lainnya, lalu sesuaikan isinya:
 
-2. Create a Next.js app using the Supabase Starter template npx command
+```env
+# URL proyek Supabase Anda (bisa didapatkan di dashboard Supabase)
+NEXT_PUBLIC_SUPABASE_URL=https://proyek-anda.supabase.co
 
+# Kunci API Anonim / Publishable Supabase Anda
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=kunci-anon-supabase-anda
+
+# Alamat server backend Kecerdasan Buatan (FastAPI)
+# Default-nya adalah http://127.0.0.1:8000 jika backend dijalankan di komputer lokal Anda
+NEXT_PUBLIC_MARINE_API_URL=http://127.0.0.1:8000
+```
+6. Simpan file tersebut (**Ctrl + S** di Windows atau **Cmd + S** di Mac).
+
+---
+
+## Langkah 3: Menginstal Paket Pendukung
+
+Langkah ini dilakukan untuk mengunduh modul-modul pustaka yang dibutuhkan aplikasi agar dapat berjalan dengan sempurna.
+
+1. Buka **Command Prompt** (Windows) atau **Terminal** (Mac).
+2. Arahkan ke folder `frontend` proyek ini.
+   > 💡 **Tips Cepat untuk Windows**: Buka folder `frontend` di File Explorer, klik pada kolom alamat (Address Bar) di bagian atas, ketik `cmd`, lalu tekan **Enter**. Jendela Command Prompt akan langsung terbuka di folder yang tepat.
+3. Ketik perintah berikut lalu tekan **Enter**:
    ```bash
-   npx create-next-app --example with-supabase with-supabase-app
+   npm install
    ```
+4. Tunggu hingga proses pengunduhan selesai (biasanya memakan waktu 1–3 menit tergantung kecepatan internet Anda). Proses ini akan membuat folder baru bernama `node_modules` di dalam direktori `frontend` Anda.
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+---
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+## Langkah 4: Menjalankan Aplikasi
 
-3. Use `cd` to change into the app's directory
+Setelah semua persiapan selesai, Anda dapat langsung menyalakan server lokal aplikasi:
 
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
-
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
-5. You can now run the Next.js local development server:
-
+1. Di Command Prompt / Terminal yang sama, ketik perintah:
    ```bash
    npm run dev
    ```
+2. Jika berhasil, Anda akan melihat teks berwarna hijau/putih seperti ini:
+   ```text
+   ▲ Next.js 15.3.1
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.10:3000
+   ```
+3. Buka browser Anda (Google Chrome, Microsoft Edge, Safari, dll.), lalu ketik alamat berikut di kolom pencarian:
+   👉 **[http://localhost:3000](http://localhost:3000)**
+4. Selamat! Aplikasi **Marine Navigation Assistant** sudah berjalan di komputer lokal Anda dan siap digunakan.
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+---
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## 🗺️ Cara Penggunaan Fitur Utama
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+Setelah halaman aplikasi web terbuka di browser Anda, berikut adalah panduan penggunaannya:
 
-## Feedback and issues
+### 1. Navigasi Halaman Utama (Homepage)
+* Halaman ini menampilkan informasi ringkas mengenai kapabilitas sistem.
+* Terdapat tombol pintas **💬 Open Chatbot** dan **📡 Track a Ship** untuk berpindah fitur secara instan.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### 2. Pelacakan Kapal & Analisis Rute (`/track-ship`)
+Halaman ini dapat diakses langsung tanpa perlu mendaftar/login:
+* **Interactive AIS Map (Peta Interaktif)**: Menampilkan rute kapal di peta laut.
+  * Anda dapat berpindah tab antara **Standard Route** (rute pelayaran standar) dan **Massive Route (Density)** (visualisasi kepadatan lalu lintas jalur laut) melalui tombol pilihan di atas peta.
+* **Marine AI Chatbot (Panel Obrolan Kanan)**: Asisten cerdas bertenaga AI untuk berinteraksi langsung. Anda dapat:
+  * Menggunakan tombol pintasan cepat seperti **Find Route** atau **AIS Info** di atas kolom input teks untuk mengirim perintah otomatis.
+  * Mengetik pertanyaan/perintah kustom di kolom input di bagian bawah (contoh: `"Tampilkan rute dari Jakarta ke Singapura"` atau `"Jelaskan kualitas data AIS rute ini"`).
+  * AI akan memproses perintah dan memperbarui peta di sebelah kiri secara dinamis berdasarkan rute laut yang disarankan!
+* **Status Dashboard (Bagian Bawah)**: Menampilkan ringkasan status pelayaran, pelabuhan keberangkatan, pelabuhan tujuan, jumlah koordinat yang dilacak, dan status saat ini (misalnya: *Completed*).
 
-## More Supabase examples
+### 3. Halaman Terproteksi (`/protected`)
+* Halaman khusus yang memerlukan pendaftaran/login akun Supabase terlebih dahulu.
+* Menampilkan informasi kredensial akun pengguna yang sedang aktif/login.
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+---
+
+## ⚠️ Penyelesaian Masalah (Troubleshooting)
+
+Berikut beberapa kendala yang mungkin Anda temui beserta solusinya:
+
+| Gejala/Masalah | Penyebab Utama | Solusi |
+| :--- | :--- | :--- |
+| **Peta tidak muncul / Asisten AI membalas dengan pesan error koneksi** | Server backend FastAPI belum dijalankan. | Pastikan aplikasi backend di folder `/ml` sudah berjalan di alamat `http://127.0.0.1:8000`. Jika backend berjalan di alamat/port berbeda, sesuaikan nilai `NEXT_PUBLIC_MARINE_API_URL` di file `.env.local` Anda. |
+| **Error: "sh: next: command not found" saat menjalankan npm run dev** | Folder pustaka pendukung belum terinstal atau corrupt. | Jalankan kembali perintah `npm install` di terminal Anda dan pastikan koneksi internet stabil sampai selesai. |
+| **Halaman `/protected` mengarah ke halaman login** | Anda belum terdaftar / belum masuk. | Silakan buat akun baru atau masuk menggunakan fitur autentikasi (Sign Up/Sign In) yang telah disediakan di halaman login aplikasi. |
+| **Aplikasi tidak bisa diakses di browser dengan alamat localhost:3000** | Port `3000` sedang digunakan oleh program lain di komputer Anda. | Next.js akan mendeteksi ini dan otomatis memindahkan port (misalnya ke `http://localhost:3001`). Cek terminal Anda dan buka alamat localhost dengan nomor port baru yang tertera di sana. |
+
+---
+
+🚢 **Marine Chatbot — Project SOF106**
