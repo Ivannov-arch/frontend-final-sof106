@@ -84,7 +84,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-900 py-6 text-center text-xs text-slate-500 bg-slate-950">
-        Marine Chatbot — SOF106 &copy; {new Date().getFullYear()}
+        Marine Chatbot — SOF106 &copy; 2026
       </footer>
     </main>
   );
