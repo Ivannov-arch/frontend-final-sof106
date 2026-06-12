@@ -2,13 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Compass, MessageSquare, RefreshCw, Send, Ship } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useMarineStore } from "@/lib/store";
 
-interface Message {
-  id: string;
-  sender: "bot" | "user";
-  text: string;
-  timestamp: string;
-}
+// Dynamically import map with ssr: false since Leaflet uses the window object
+const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
 interface ChatApiResponse {
   success: boolean;
@@ -18,6 +16,8 @@ interface ChatApiResponse {
     content?: string;
   };
   markdown?: string;
+  path?: string[];
+  coordinates?: [number, number][];
   mapUrl?: string;
   mapHtml?: string;
 }
@@ -25,35 +25,25 @@ interface ChatApiResponse {
 // API endpoints to try in order: env override → local → Render deployment
 const API_CANDIDATES = [
   process.env.NEXT_PUBLIC_MARINE_API_URL,
-  // "http://localhost:8000",
+  "http://localhost:8000",
   "https://marine-sof106.onrender.com",
 ].filter(Boolean) as string[];
 
-type ApiStatus = "checking" | "connected" | "disconnected";
-
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    sender: "bot",
-    text: "Hello! I am your Marine Traffic AI Assistant. I can help you track voyages, analyze AIS data quality, and visualize routes.",
-    timestamp: "Just now",
-  },
-  {
-    id: "2",
-    sender: "bot",
-    text: "Currently showing the standard route from Port Klang (Malaysia) to Singapore. Use the tabs above the map to switch views.",
-    timestamp: "Just now",
-  },
-];
-
 export default function TrackShipPage() {
-  const [mapType, setMapType] = useState<"route" | "massive_route">("route");
-  const [mapUrl, setMapUrl] = useState("/maps/route.html");
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const messages = useMarineStore((state) => state.messages);
+  const setMessages = useMarineStore((state) => state.setMessages);
+  const mapType = useMarineStore((state) => state.mapType);
+  const setMapType = useMarineStore((state) => state.setMapType);
+  const setRouteData = useMarineStore((state) => state.setRouteData);
+  const resetChat = useMarineStore((state) => state.resetChat);
+
+  const apiStatus = useMarineStore((state) => state.apiStatus);
+  const setApiStatus = useMarineStore((state) => state.setApiStatus);
+  const activeApiUrl = useMarineStore((state) => state.activeApiUrl);
+  const setActiveApiUrl = useMarineStore((state) => state.setActiveApiUrl);
+
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
-  const [activeApiUrl, setActiveApiUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Probe each candidate API URL until one responds
@@ -78,7 +68,7 @@ export default function TrackShipPage() {
     setApiStatus("disconnected");
     setActiveApiUrl(null);
     return null;
-  }, []);
+  }, [setApiStatus, setActiveApiUrl]);
 
   // Probe on mount, then every 30s
   useEffect(() => {
@@ -159,24 +149,32 @@ export default function TrackShipPage() {
         },
       ]);
 
-      if (data.mapHtml) {
+      let coordinates = data.coordinates;
+      let path = data.path;
+
+      // Fallback parsing from mapUrl if coordinates are missing (e.g. against older/deployed backend versions)
+      if ((!coordinates || coordinates.length === 0) && data.mapUrl) {
         try {
-          await fetch("/api/save-map", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ html: data.mapHtml }),
-          });
-          setMapUrl(`/maps/route.html?v=${Date.now()}`);
-          setMapType("route");
+          const urlObj = new URL(data.mapUrl, "http://dummy.com");
+          const coordsParam = urlObj.searchParams.get("coords");
+          const pathParam = urlObj.searchParams.get("path");
+          if (coordsParam) {
+            coordinates = coordsParam.split(";").map((pair) => {
+              const [lat, lon] = pair.split(",").map(Number);
+              return [lat, lon] as [number, number];
+            });
+          }
+          if (pathParam) {
+            path = pathParam.split("|");
+          }
         } catch (err) {
-          console.error("Failed to save dynamic map HTML:", err);
+          console.error("Failed to parse fallback coordinates from mapUrl:", err);
         }
-      } else if (data.mapUrl) {
-        const relativeUrl = data.mapUrl.startsWith("/")
-          ? data.mapUrl
-          : `/${data.mapUrl}`;
-        setMapUrl(relativeUrl);
-        setMapType(data.mapUrl.includes("massive") ? "massive_route" : "route");
+      }
+
+      if (coordinates && coordinates.length > 0) {
+        setRouteData(path || [], coordinates);
+        setMapType("route");
       }
     } catch {
       // Mark as disconnected and re-probe in background
@@ -265,10 +263,7 @@ export default function TrackShipPage() {
               </div>
               <div className="flex bg-slate-850 p-1 rounded-lg border border-slate-800">
                 <button
-                  onClick={() => {
-                    setMapType("route");
-                    setMapUrl("/maps/route.html");
-                  }}
+                  onClick={() => setMapType("route")}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     mapType === "route"
                       ? "bg-blue-600 text-white shadow-lg"
@@ -278,10 +273,7 @@ export default function TrackShipPage() {
                   Standard Route
                 </button>
                 <button
-                  onClick={() => {
-                    setMapType("massive_route");
-                    setMapUrl("/maps/massive_route.html");
-                  }}
+                  onClick={() => setMapType("massive_route")}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     mapType === "massive_route"
                       ? "bg-blue-600 text-white shadow-lg"
@@ -294,11 +286,7 @@ export default function TrackShipPage() {
             </div>
 
             <div className="flex-1 bg-slate-950 relative">
-              <iframe
-                src={mapUrl}
-                className="w-full h-full border-none"
-                title="AIS Marine Map"
-              />
+              <Map />
             </div>
           </div>
 
@@ -347,7 +335,7 @@ export default function TrackShipPage() {
               </span>
             </div>
             <button
-              onClick={() => setMessages(initialMessages)}
+              onClick={resetChat}
               className="text-xs text-slate-400 hover:text-slate-200 p-1.5 hover:bg-slate-800 rounded-lg transition-all"
               title="Reset Chat"
             >
@@ -396,6 +384,18 @@ export default function TrackShipPage() {
             >
               Find Route
             </button>
+            <button
+              onClick={() => setInputValue("list ports")}
+              className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            >
+              List Ports
+            </button>
+            {/* <button
+              onClick={() => setInputValue("show traffic from port Klang to Singapore")}
+              className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            >
+              Show Traffic
+            </button> */}
             <button
               onClick={() => setInputValue("What is AIS data?")}
               className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
