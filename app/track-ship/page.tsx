@@ -274,6 +274,18 @@ export default function TrackShipPage() {
               Find Route
             </button>
             <button
+              onClick={() => setInputValue("list ports")}
+              className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            >
+              List Ports
+            </button>
+            <button
+              onClick={() => setInputValue("help")}
+              className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            >
+              User Guide
+            </button>
+            <button
               onClick={() => setInputValue("What is AIS data?")}
               className="text-xs bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1 rounded-full whitespace-nowrap transition-all"
             >
