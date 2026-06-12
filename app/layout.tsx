@@ -10,7 +10,8 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Marine Chatbot",
-  description: "AI-powered marine navigation assistant for routing and ship tracking",
+  description:
+    "AI-powered marine navigation assistant for routing and ship tracking",
 };
 
 const geistSans = Geist({
