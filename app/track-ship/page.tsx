@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Compass, MessageSquare, RefreshCw, Send, Ship } from "lucide-react";
 
 interface Message {
   id: string;
-  sender: 'bot' | 'user';
+  sender: "bot" | "user";
   text: string;
   timestamp: string;
 }
@@ -22,35 +22,77 @@ interface ChatApiResponse {
   mapHtml?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_MARINE_API_URL || "http://127.0.0.1:8000";
+// API endpoints to try in order: env override → local → Render deployment
+const API_CANDIDATES = [
+  process.env.NEXT_PUBLIC_MARINE_API_URL,
+  // "http://localhost:8000",
+  "https://marine-sof106.onrender.com",
+].filter(Boolean) as string[];
+
+type ApiStatus = "checking" | "connected" | "disconnected";
+
 const initialMessages: Message[] = [
   {
-    id: '1',
-    sender: 'bot',
-    text: 'Hello! I am your Marine Traffic AI Assistant. I can help you track voyages, analyze AIS data quality, and visualize routes.',
-    timestamp: 'Just now',
+    id: "1",
+    sender: "bot",
+    text: "Hello! I am your Marine Traffic AI Assistant. I can help you track voyages, analyze AIS data quality, and visualize routes.",
+    timestamp: "Just now",
   },
   {
-    id: '2',
-    sender: 'bot',
-    text: 'Currently showing the standard route from Port Klang (Malaysia) to Singapore. Use the tabs above the map to switch views.',
-    timestamp: 'Just now',
+    id: "2",
+    sender: "bot",
+    text: "Currently showing the standard route from Port Klang (Malaysia) to Singapore. Use the tabs above the map to switch views.",
+    timestamp: "Just now",
   },
 ];
 
 export default function TrackShipPage() {
-  const [mapType, setMapType] = useState<'route' | 'massive_route'>('route');
-  const [mapUrl, setMapUrl] = useState('/maps/route.html');
+  const [mapType, setMapType] = useState<"route" | "massive_route">("route");
+  const [mapUrl, setMapUrl] = useState("/maps/route.html");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
+  const [activeApiUrl, setActiveApiUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Probe each candidate API URL until one responds
+  const probeApi = useCallback(async (): Promise<string | null> => {
+    setApiStatus("checking");
+    for (const baseUrl of API_CANDIDATES) {
+      try {
+        const url = baseUrl.replace(/\/+$/, "");
+        const res = await fetch(url, {
+          method: "GET",
+          signal: AbortSignal.timeout(4000),
+        });
+        if (res.ok) {
+          setActiveApiUrl(url);
+          setApiStatus("connected");
+          return url;
+        }
+      } catch {
+        // try next candidate
+      }
+    }
+    setApiStatus("disconnected");
+    setActiveApiUrl(null);
+    return null;
+  }, []);
+
+  // Probe on mount, then every 30s
+  useEffect(() => {
+    probeApi();
+    const interval = setInterval(probeApi, 30_000);
+    return () => clearInterval(interval);
+  }, [probeApi]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const getTimestamp = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const getTimestamp = () =>
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,16 +104,36 @@ export default function TrackShipPage() {
       ...prev,
       {
         id: Date.now().toString(),
-        sender: 'user',
+        sender: "user",
         text: userRawText,
         timestamp: getTimestamp(),
       },
     ]);
-    setInputValue('');
+    setInputValue("");
     setIsTyping(true);
 
+    // If no API is connected, re-probe before giving up
+    let currentUrl = activeApiUrl;
+    if (!currentUrl) {
+      currentUrl = await probeApi();
+    }
+
+    if (!currentUrl) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: "bot",
+          text: `⚠️ Connection Error: Unable to reach any Marine API server.\n\nTried:\n${API_CANDIDATES.map((u) => `• ${u}`).join("\n")}\n\nPlease ensure the FastAPI backend is running locally (python -m uvicorn mt.chatbot.api:app) or the Render deployment is active.`,
+          timestamp: getTimestamp(),
+        },
+      ]);
+      setIsTyping(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+      const response = await fetch(`${currentUrl}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,13 +146,14 @@ export default function TrackShipPage() {
       }
 
       const data: ChatApiResponse = await response.json();
-      const botText = data.markdown || data.response?.content || "No response received.";
+      const botText =
+        data.markdown || data.response?.content || "No response received.";
 
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          sender: 'bot',
+          sender: "bot",
           text: botText,
           timestamp: getTimestamp(),
         },
@@ -98,28 +161,35 @@ export default function TrackShipPage() {
 
       if (data.mapHtml) {
         try {
-          await fetch('/api/save-map', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html: data.mapHtml })
+          await fetch("/api/save-map", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ html: data.mapHtml }),
           });
           setMapUrl(`/maps/route.html?v=${Date.now()}`);
-          setMapType('route');
+          setMapType("route");
         } catch (err) {
           console.error("Failed to save dynamic map HTML:", err);
         }
       } else if (data.mapUrl) {
-        const relativeUrl = data.mapUrl.startsWith('/') ? data.mapUrl : `/${data.mapUrl}`;
+        const relativeUrl = data.mapUrl.startsWith("/")
+          ? data.mapUrl
+          : `/${data.mapUrl}`;
         setMapUrl(relativeUrl);
-        setMapType(data.mapUrl.includes('massive') ? 'massive_route' : 'route');
+        setMapType(data.mapUrl.includes("massive") ? "massive_route" : "route");
       }
     } catch {
+      // Mark as disconnected and re-probe in background
+      setApiStatus("disconnected");
+      setActiveApiUrl(null);
+      probeApi();
+
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          sender: 'bot',
-          text: `Connection Error: unable to connect to the Marine AI routing server. Please ensure FastAPI is running at ${API_BASE_URL}.`,
+          sender: "bot",
+          text: `⚠️ Connection lost to ${currentUrl}. Searching for an available server...\n\nPlease try again in a moment.`,
           timestamp: getTimestamp(),
         },
       ]);
@@ -137,13 +207,48 @@ export default function TrackShipPage() {
               <Ship className="h-5 w-5 animate-pulse" />
             </div>
             <div>
-              <h1 className="font-bold text-lg leading-tight tracking-tight">AIS Voyage Tracker</h1>
-              <p className="text-xs text-slate-400">Powered by mt-ais-toolbox</p>
+              <h1 className="font-bold text-lg leading-tight tracking-tight">
+                AIS Voyage Tracker
+              </h1>
+              <p className="text-xs text-slate-400">
+                Powered by mt-ais-toolbox
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500 animate-ping"></span>
-            <span className="text-xs text-slate-300 font-medium">AIS API Link Live</span>
+            <span
+              className={`h-2 w-2 rounded-full ${
+                apiStatus === "connected"
+                  ? "bg-green-500 animate-ping"
+                  : apiStatus === "checking"
+                    ? "bg-yellow-500 animate-pulse"
+                    : "bg-red-500"
+              }`}
+            ></span>
+            <span
+              className={`text-xs font-medium ${
+                apiStatus === "connected"
+                  ? "text-green-400"
+                  : apiStatus === "checking"
+                    ? "text-yellow-400"
+                    : "text-red-400"
+              }`}
+            >
+              {apiStatus === "connected"
+                ? `API Connected`
+                : apiStatus === "checking"
+                  ? "Connecting..."
+                  : "API Offline"}
+            </span>
+            {apiStatus === "disconnected" && (
+              <button
+                onClick={probeApi}
+                className="text-xs text-slate-400 hover:text-white transition-colors"
+                title="Retry connection"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -154,31 +259,33 @@ export default function TrackShipPage() {
             <div className="p-4 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Compass className="h-5 w-5 text-blue-400" />
-                <span className="font-semibold text-sm">Interactive AIS Map</span>
+                <span className="font-semibold text-sm">
+                  Interactive AIS Map
+                </span>
               </div>
               <div className="flex bg-slate-850 p-1 rounded-lg border border-slate-800">
                 <button
                   onClick={() => {
-                    setMapType('route');
-                    setMapUrl('/maps/route.html');
+                    setMapType("route");
+                    setMapUrl("/maps/route.html");
                   }}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    mapType === 'route'
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-slate-400 hover:text-slate-200'
+                    mapType === "route"
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Standard Route
                 </button>
                 <button
                   onClick={() => {
-                    setMapType('massive_route');
-                    setMapUrl('/maps/massive_route.html');
+                    setMapType("massive_route");
+                    setMapUrl("/maps/massive_route.html");
                   }}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    mapType === 'massive_route'
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-slate-400 hover:text-slate-200'
+                    mapType === "massive_route"
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Massive Route (Density)
@@ -197,19 +304,33 @@ export default function TrackShipPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-              <span className="text-xs text-slate-400 font-medium">Departure Port</span>
-              <span className="text-sm font-semibold text-white mt-1">Port Klang (MY)</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Departure Port
+              </span>
+              <span className="text-sm font-semibold text-white mt-1">
+                Port Klang (MY)
+              </span>
             </div>
             <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-              <span className="text-xs text-slate-400 font-medium">Destination Port</span>
-              <span className="text-sm font-semibold text-white mt-1">Singapore (SG)</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Destination Port
+              </span>
+              <span className="text-sm font-semibold text-white mt-1">
+                Singapore (SG)
+              </span>
             </div>
             <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-              <span className="text-xs text-slate-400 font-medium">Tracked Coordinates</span>
-              <span className="text-sm font-semibold text-white mt-1">2,415 Points</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Tracked Coordinates
+              </span>
+              <span className="text-sm font-semibold text-white mt-1">
+                2,415 Points
+              </span>
             </div>
             <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-              <span className="text-xs text-slate-400 font-medium">Current Status</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Current Status
+              </span>
               <span className="text-xs font-bold px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full w-fit mt-1">
                 Completed
               </span>
@@ -221,7 +342,9 @@ export default function TrackShipPage() {
           <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-blue-400" />
-              <span className="font-semibold text-sm text-slate-200">Marine AI Chatbot</span>
+              <span className="font-semibold text-sm text-slate-200">
+                Marine AI Chatbot
+              </span>
             </div>
             <button
               onClick={() => setMessages(initialMessages)}
@@ -236,13 +359,13 @@ export default function TrackShipPage() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm whitespace-pre-line leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
+                    msg.sender === "user"
+                      ? "bg-blue-600 text-white rounded-br-none"
+                      : "bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none"
                   }`}
                 >
                   {msg.text}
@@ -281,7 +404,10 @@ export default function TrackShipPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSendMessage} className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
+          <form
+            onSubmit={handleSendMessage}
+            className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2"
+          >
             <input
               type="text"
               value={inputValue}
