@@ -12,7 +12,7 @@ export default function Home() {
               <Ship className="h-5 w-5" />
             </div>
             <Link href="/" className="font-bold text-lg leading-tight tracking-tight hover:text-blue-400 transition-colors">
-              Marine Chatbot
+              Marine Route Optimizer
             </Link>
           </div>
           <div className="flex items-center gap-6">
@@ -84,7 +84,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-900 py-6 text-center text-xs text-slate-500 bg-slate-950">
-        Marine Chatbot — SOF106 &copy; 2026
+        Marine Route Optimizer — SOF106 &copy; 2026
       </footer>
     </main>
   );

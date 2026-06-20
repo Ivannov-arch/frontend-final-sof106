@@ -139,4 +139,4 @@ Berikut beberapa kendala yang mungkin Anda temui beserta solusinya:
 
 ---
 
-🚢 **Marine Chatbot — Project SOF106**
+🚢 **Marine Route Optimizer — Project SOF106**
