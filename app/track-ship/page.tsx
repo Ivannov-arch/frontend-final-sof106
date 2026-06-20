@@ -523,7 +523,7 @@ export default function TrackShipPage() {
         {
           id: (Date.now() + 1).toString(),
           sender: "bot",
-          text: `⚠️ Connection lost to ${currentUrl}. Searching for servers...`,
+          text: `⚠️ API Servers are currently offline. Searching for servers...`,
           timestamp: getTimestamp(),
         },
       ]);
