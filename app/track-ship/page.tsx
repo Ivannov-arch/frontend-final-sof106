@@ -50,7 +50,7 @@ const API_CANDIDATES = [
 ].filter(Boolean) as string[];
 
 // Bounding box preset configurations
-const ZONE_PRESETS = {
+const ZONE_PRESETS: Record<string, { name: string; bounds: [[number, number], [number, number]] }> = {
   singapore: { name: "Singapore Strait", bounds: [[1.15, 103.50], [1.45, 104.30]] },
   sunda: { name: "Sunda Strait", bounds: [[-6.10, 105.70], [-5.70, 106.10]] },
   malacca: { name: "Malacca Strait", bounds: [[2.00, 101.00], [3.50, 102.50]] },
@@ -130,20 +130,10 @@ export default function TrackShipPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const logTerminalEndRef = useRef<HTMLDivElement>(null);
 
-  // Web socket & generator timers refs
-  const wsRef = useRef<WebSocket | null>(null);
+  // Connection refs
+  const sseAbortRef = useRef<AbortController | null>(null);
   const demoIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const localMockVesselsRef = useRef<Record<string, VesselData>>({});
-  const wasActiveRef = useRef(false);
-
-  // Track if the stream was active/connected
-  useEffect(() => {
-    if (aisStatus === "connected" || aisStatus === "connecting") {
-      wasActiveRef.current = true;
-    } else if (aisStatus === "disconnected") {
-      wasActiveRef.current = false;
-    }
-  }, [aisStatus]);
 
   // Auto-scroll for logs terminal
   useEffect(() => {
@@ -190,9 +180,9 @@ export default function TrackShipPage() {
   // AIS Stream Engine Connection Handler
   const handleAisConnect = useCallback(() => {
     // Clean up any existing instances
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (sseAbortRef.current) {
+      sseAbortRef.current.abort();
+      sseAbortRef.current = null;
     }
     if (demoIntervalRef.current) {
       clearInterval(demoIntervalRef.current);
@@ -273,7 +263,7 @@ export default function TrackShipPage() {
 
       }, 1000);
     } else {
-      // Connect to Live WebSocket API
+      // Connect via backend SSE proxy (AISstream blocks direct browser connections)
       if (!SHARED_AIS_KEY) {
         setAisStatus("error");
         setAisError("Shared API Key is missing. Please add NEXT_PUBLIC_AISSTREAM_API_KEY to your .env.local file and restart the server.");
@@ -281,122 +271,114 @@ export default function TrackShipPage() {
         return;
       }
 
+      let backendUrl = activeApiUrl;
+      if (!backendUrl) {
+        setAisStatus("error");
+        setAisError("Backend API is offline. Cannot proxy AIS stream.");
+        addAisLog("[System Error] Backend API not reachable. Start the FastAPI server.");
+        return;
+      }
+
       setAisStatus("connecting");
       setAisError(null);
-      addAisLog("[System] Establishing secure WebSocket connection to wss://stream.aisstream.io/v0/stream...");
+      addAisLog("[System] Connecting to AIS stream via backend proxy...");
 
-      try {
-        const ws = new WebSocket("wss://stream.aisstream.io/v0/stream");
-        wsRef.current = ws;
+      const targetZone = ZONE_PRESETS[aisTrackingZone] ?? ZONE_PRESETS.singapore;
+      const [[minLat, minLon], [maxLat, maxLon]] = targetZone.bounds;
+      const params = new URLSearchParams({
+        api_key: SHARED_AIS_KEY,
+        min_lat: String(minLat),
+        min_lon: String(minLon),
+        max_lat: String(maxLat),
+        max_lon: String(maxLon),
+      });
 
-        ws.onopen = () => {
-          setAisStatus("connected");
-          addAisLog("[System] WebSocket connected! Submitting credentials and bounding scope...");
+      const controller = new AbortController();
+      sseAbortRef.current = controller;
 
-          const targetZone = aisTrackingZone !== "custom" 
-            ? ZONE_PRESETS[aisTrackingZone as keyof typeof ZONE_PRESETS] 
-            : ZONE_PRESETS.singapore;
-          
-          const activeKey = SHARED_AIS_KEY;
-          addAisLog(`[System] Using Shared API Key: ${activeKey.slice(0, 4)}...${activeKey.slice(-4)}`);
+      addAisLog(`[System] Subscribing to zone: ${targetZone.name} | Bounds: [[${minLat},${minLon}],[${maxLat},${maxLon}]]`);
 
-          const subscriptionPayload = {
-            APIKey: activeKey,
-            BoundingBoxes: [targetZone.bounds],
-          };
-
-          ws.send(JSON.stringify(subscriptionPayload));
-          addAisLog(`[System] Subscription payload sent. Monitoring zone: ${targetZone.name || "Custom"} | Bounds: ${JSON.stringify(targetZone.bounds)}`);
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-
-            // Handle AISStream-specific error messages
-            if (data.error) {
-              setAisStatus("error");
-              setAisError(`AISStream Error: ${data.error}`);
-              addAisLog(`[AISStream API Error] ${data.error}`);
-              if (data.error.toLowerCase().includes("api key") || data.error.toLowerCase().includes("invalid")) {
-                addAisLog("[System Hint] Your AISstream API key seems to be invalid or unauthorized. Please verify the key in .env.local or your inputs.");
-              }
-              ws.close();
-              return;
-            }
-
-            const msgType = data.MessageType;
-            const meta = data.MetaData || {};
-            const mmsi = meta.MMSI_String || String(meta.MMSI);
-
-            if (!mmsi) return;
-
-            const name = meta.ShipName?.trim() || `Vessel ${mmsi}`;
-            const lat = meta.latitude;
-            const lon = meta.longitude;
-
-            if (lat === undefined || lon === undefined) return;
-
-            let sog = 0;
-            let cog = 0;
-            let heading = 0;
-            let destination = "";
-            let shipType = 0;
-
-            if (msgType === "PositionReport" && data.Message?.PositionReport) {
-              sog = data.Message.PositionReport.Sog || 0;
-              cog = data.Message.PositionReport.Cog || 0;
-              heading = data.Message.PositionReport.TrueHeading || 0;
-            } else if (msgType === "ShipStaticData" && data.Message?.ShipStaticData) {
-              destination = data.Message.ShipStaticData.Destination?.trim() || "";
-              shipType = data.Message.ShipStaticData.Type || 0;
-            }
-
-            const parsedVessel: Partial<VesselData> & { mmsi: string } = {
-              mmsi,
-              name,
-              latitude: lat,
-              longitude: lon,
-              sog,
-              cog,
-              heading: heading || cog,
-              lastUpdated: meta.time_utc || new Date().toISOString(),
-            };
-
-            if (destination) parsedVessel.destination = destination;
-            if (shipType) parsedVessel.shipType = shipType;
-
-            updateAisVessel(parsedVessel);
-            addAisLog(`[Live AIS] Data Packet parsed | Type: ${msgType} | Vessel: ${name} (${mmsi}) | Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`);
-          } catch (e) {
-            console.error("Error parsing AIS packet:", e);
+      fetch(`${backendUrl}/api/ais/stream?${params}`, { signal: controller.signal })
+        .then(async (res) => {
+          if (!res.ok || !res.body) {
+            throw new Error(`Proxy returned ${res.status}`);
           }
-        };
+          setAisStatus("connected");
+          addAisLog("[System] SSE proxy connected. Streaming live AIS data...");
 
-        ws.onerror = (err) => {
-          console.error("AIS Stream Error:", err);
-          setAisStatus("error");
-          setAisError("A network error occurred. Validate credentials and connection status.");
-          addAisLog("[System Error] WebSocket encountered a connection error.");
-        };
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
 
-        ws.onclose = () => {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.error) {
+                  setAisStatus("error");
+                  setAisError(`AISStream Error: ${data.error}`);
+                  addAisLog(`[AISStream API Error] ${data.error}`);
+                  controller.abort();
+                  return;
+                }
+
+                const msgType = data.MessageType;
+                const meta = data.MetaData || {};
+                const mmsi = meta.MMSI_String || String(meta.MMSI);
+                if (!mmsi) continue;
+
+                const name = meta.ShipName?.trim() || `Vessel ${mmsi}`;
+                const lat = meta.latitude;
+                const lon = meta.longitude;
+                if (lat === undefined || lon === undefined) continue;
+
+                let sog = 0, cog = 0, heading = 0, destination = "", shipType = 0;
+                if (msgType === "PositionReport" && data.Message?.PositionReport) {
+                  sog = data.Message.PositionReport.Sog || 0;
+                  cog = data.Message.PositionReport.Cog || 0;
+                  heading = data.Message.PositionReport.TrueHeading || 0;
+                } else if (msgType === "ShipStaticData" && data.Message?.ShipStaticData) {
+                  destination = data.Message.ShipStaticData.Destination?.trim() || "";
+                  shipType = data.Message.ShipStaticData.Type || 0;
+                }
+
+                const parsedVessel: Partial<VesselData> & { mmsi: string } = {
+                  mmsi, name, latitude: lat, longitude: lon, sog, cog,
+                  heading: heading || cog,
+                  lastUpdated: meta.time_utc || new Date().toISOString(),
+                };
+                if (destination) parsedVessel.destination = destination;
+                if (shipType) parsedVessel.shipType = shipType;
+
+                updateAisVessel(parsedVessel);
+                addAisLog(`[Live AIS] ${msgType} | ${name} (${mmsi}) | Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`);
+              } catch {
+                // skip malformed line
+              }
+            }
+          }
           setAisStatus("disconnected");
-          addAisLog("[System] WebSocket stream disconnected.");
-        };
-
-      } catch (err: any) {
-        setAisStatus("error");
-        setAisError(err.message || "Failed to initialize WebSocket Client.");
-        addAisLog(`[System Error] Initialization failure: ${err.message}`);
-      }
+          addAisLog("[System] SSE stream ended.");
+        })
+        .catch((err: any) => {
+          if (err.name === "AbortError") return;
+          setAisStatus("error");
+          setAisError(err.message || "SSE proxy connection failed.");
+          addAisLog(`[System Error] ${err.message}`);
+        });
     }
-  }, [aisDemoMode, aisApiKey, aisTrackingZone, updateAisVessel, addAisLog, clearAisVessels, setAisStatus, setAisError]);
+  }, [aisDemoMode, aisApiKey, aisTrackingZone, activeApiUrl, updateAisVessel, addAisLog, clearAisVessels, setAisStatus, setAisError]);
 
   const handleAisDisconnect = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (sseAbortRef.current) {
+      sseAbortRef.current.abort();
+      sseAbortRef.current = null;
     }
     if (demoIntervalRef.current) {
       clearInterval(demoIntervalRef.current);
@@ -408,20 +390,18 @@ export default function TrackShipPage() {
 
   // Handle auto-reconnect when toggling tracking parameters or mounting
   useEffect(() => {
-    const wasActive = wasActiveRef.current;
-
-    // Clean up websocket/timer objects
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    // Clean up any active connections
+    if (sseAbortRef.current) {
+      sseAbortRef.current.abort();
+      sseAbortRef.current = null;
     }
     if (demoIntervalRef.current) {
       clearInterval(demoIntervalRef.current);
       demoIntervalRef.current = null;
     }
 
-    // Only reconnect if the stream was previously active/connecting
-    if (mapType === "massive_route" && wasActive) {
+    // Auto-connect whenever the AIS tab is active
+    if (mapType === "massive_route") {
       handleAisConnect();
     }
   }, [mapType, aisTrackingZone, aisDemoMode, handleAisConnect]); // Re-connect automatically on configuration tweaks

@@ -114,11 +114,12 @@ export default function Map() {
 
     // Draw alternative routes
     if (alternativeRoutes && alternativeRoutes.length > 0) {
+      const altColors = ["#F54927", "#2768F5", "#8BF527"];
       alternativeRoutes.forEach((alt, idx) => {
         const altPolyline = L.polyline(alt.coordinates, {
-          color: "#94a3b8", // Slate / Gray
+          color: altColors[idx % altColors.length],
           weight: 3,
-          opacity: 0.6,
+          opacity: 0.7,
           dashArray: "6, 12",
           lineCap: "round",
           lineJoin: "round",
@@ -127,6 +128,7 @@ export default function Map() {
         altPolylinesRef.current.push(altPolyline);
       });
     }
+
 
     try {
       const allCoords = [...routeCoordinates];
