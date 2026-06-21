@@ -17,8 +17,6 @@ import {
   Info,
   Sliders,
   CheckCircle,
-  Eye,
-  EyeOff
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -50,39 +48,231 @@ const API_CANDIDATES = [
 ].filter(Boolean) as string[];
 
 // Bounding box preset configurations
-const ZONE_PRESETS: Record<string, { name: string; bounds: [[number, number], [number, number]] }> = {
-  singapore: { name: "Singapore Strait", bounds: [[1.15, 103.50], [1.45, 104.30]] },
-  sunda: { name: "Sunda Strait", bounds: [[-6.10, 105.70], [-5.70, 106.10]] },
-  malacca: { name: "Malacca Strait", bounds: [[2.00, 101.00], [3.50, 102.50]] },
-  jakarta: { name: "Jakarta Bay", bounds: [[-6.15, 106.70], [-5.95, 107.00]] },
+const ZONE_PRESETS: Record<
+  string,
+  { name: string; bounds: [[number, number], [number, number]] }
+> = {
+  singapore: {
+    name: "Singapore Strait",
+    bounds: [
+      [1.15, 103.5],
+      [1.45, 104.3],
+    ],
+  },
+  sunda: {
+    name: "Sunda Strait",
+    bounds: [
+      [-6.1, 105.7],
+      [-5.7, 106.1],
+    ],
+  },
+  malacca: {
+    name: "Malacca Strait",
+    bounds: [
+      [2.0, 101.0],
+      [3.5, 102.5],
+    ],
+  },
+  jakarta: {
+    name: "Jakarta Bay",
+    bounds: [
+      [-6.15, 106.7],
+      [-5.95, 107.0],
+    ],
+  },
 };
 
 // Simulated mock vessel generator presets
-const MOCK_VESSELS_PRESETS: Record<string, { name: string; mmsi: string; lat: number; lon: number; sog: number; cog: number; type: number; dest: string }[]> = {
+const MOCK_VESSELS_PRESETS: Record<
+  string,
+  {
+    name: string;
+    mmsi: string;
+    lat: number;
+    lon: number;
+    sog: number;
+    cog: number;
+    type: number;
+    dest: string;
+  }[]
+> = {
   singapore: [
-    { name: "EVER GIVEN", mmsi: "353136000", lat: 1.25, lon: 103.70, sog: 11.4, cog: 85, type: 70, dest: "SINGAPORE" },
-    { name: "MAERSK MC-KINNEY", mmsi: "219400000", lat: 1.22, lon: 103.85, sog: 14.2, cog: 265, type: 70, dest: "ROTTERDAM" },
-    { name: "COSCO SHANGHAI", mmsi: "477123400", lat: 1.35, lon: 104.15, sog: 16.8, cog: 80, type: 70, dest: "SHANGHAI" },
-    { name: "BUMI SURABAYA", mmsi: "525010200", lat: 1.18, lon: 103.65, sog: 4.5, cog: 120, type: 80, dest: "BATAM" },
-    { name: "KRI BIMA SUCI", mmsi: "525100001", lat: 1.28, lon: 103.95, sog: 6.2, cog: 95, type: 55, dest: "JAKARTA" },
+    {
+      name: "EVER GIVEN",
+      mmsi: "353136000",
+      lat: 1.25,
+      lon: 103.7,
+      sog: 11.4,
+      cog: 85,
+      type: 70,
+      dest: "SINGAPORE",
+    },
+    {
+      name: "MAERSK MC-KINNEY",
+      mmsi: "219400000",
+      lat: 1.22,
+      lon: 103.85,
+      sog: 14.2,
+      cog: 265,
+      type: 70,
+      dest: "ROTTERDAM",
+    },
+    {
+      name: "COSCO SHANGHAI",
+      mmsi: "477123400",
+      lat: 1.35,
+      lon: 104.15,
+      sog: 16.8,
+      cog: 80,
+      type: 70,
+      dest: "SHANGHAI",
+    },
+    {
+      name: "BUMI SURABAYA",
+      mmsi: "525010200",
+      lat: 1.18,
+      lon: 103.65,
+      sog: 4.5,
+      cog: 120,
+      type: 80,
+      dest: "BATAM",
+    },
+    {
+      name: "KRI BIMA SUCI",
+      mmsi: "525100001",
+      lat: 1.28,
+      lon: 103.95,
+      sog: 6.2,
+      cog: 95,
+      type: 55,
+      dest: "JAKARTA",
+    },
   ],
   sunda: [
-    { name: "CRISTAL NAVIGATOR", mmsi: "371900100", lat: -5.92, lon: 105.90, sog: 12.1, cog: 15, type: 80, dest: "MERAK" },
-    { name: "INDONESIA FERRY", mmsi: "525000002", lat: -5.93, lon: 105.98, sog: 8.4, cog: 195, type: 60, dest: "BAKAUHENI" },
-    { name: "PACIFIC TANKER", mmsi: "355000230", lat: -5.85, lon: 105.82, sog: 13.5, cog: 210, type: 80, dest: "CILACAP" },
-    { name: "SILIWANGI ARMY", mmsi: "525999000", lat: -6.02, lon: 105.88, sog: 2.1, cog: 45, type: 55, dest: "SURABAYA" },
+    {
+      name: "CRISTAL NAVIGATOR",
+      mmsi: "371900100",
+      lat: -5.92,
+      lon: 105.9,
+      sog: 12.1,
+      cog: 15,
+      type: 80,
+      dest: "MERAK",
+    },
+    {
+      name: "INDONESIA FERRY",
+      mmsi: "525000002",
+      lat: -5.93,
+      lon: 105.98,
+      sog: 8.4,
+      cog: 195,
+      type: 60,
+      dest: "BAKAUHENI",
+    },
+    {
+      name: "PACIFIC TANKER",
+      mmsi: "355000230",
+      lat: -5.85,
+      lon: 105.82,
+      sog: 13.5,
+      cog: 210,
+      type: 80,
+      dest: "CILACAP",
+    },
+    {
+      name: "SILIWANGI ARMY",
+      mmsi: "525999000",
+      lat: -6.02,
+      lon: 105.88,
+      sog: 2.1,
+      cog: 45,
+      type: 55,
+      dest: "SURABAYA",
+    },
   ],
   malacca: [
-    { name: "LANGKAWI EXPRESS", mmsi: "533001222", lat: 2.80, lon: 101.40, sog: 22.4, cog: 320, type: 60, dest: "LANGKAWI" },
-    { name: "MALACCA STAR", mmsi: "563049100", lat: 2.30, lon: 101.90, sog: 10.2, cog: 140, type: 70, dest: "SINGAPORE" },
-    { name: "SEA CORAL", mmsi: "477991000", lat: 3.10, lon: 101.10, sog: 12.8, cog: 310, type: 70, dest: "PORT KLANG" },
-    { name: "PORT KLANG PILOT", mmsi: "533992200", lat: 2.95, lon: 101.25, sog: 18.1, cog: 135, type: 31, dest: "PORT KLANG" },
+    {
+      name: "LANGKAWI EXPRESS",
+      mmsi: "533001222",
+      lat: 2.8,
+      lon: 101.4,
+      sog: 22.4,
+      cog: 320,
+      type: 60,
+      dest: "LANGKAWI",
+    },
+    {
+      name: "MALACCA STAR",
+      mmsi: "563049100",
+      lat: 2.3,
+      lon: 101.9,
+      sog: 10.2,
+      cog: 140,
+      type: 70,
+      dest: "SINGAPORE",
+    },
+    {
+      name: "SEA CORAL",
+      mmsi: "477991000",
+      lat: 3.1,
+      lon: 101.1,
+      sog: 12.8,
+      cog: 310,
+      type: 70,
+      dest: "PORT KLANG",
+    },
+    {
+      name: "PORT KLANG PILOT",
+      mmsi: "533992200",
+      lat: 2.95,
+      lon: 101.25,
+      sog: 18.1,
+      cog: 135,
+      type: 31,
+      dest: "PORT KLANG",
+    },
   ],
   jakarta: [
-    { name: "DHARMA FERRY VII", mmsi: "525003112", lat: -6.08, lon: 106.85, sog: 11.2, cog: 350, type: 60, dest: "SURABAYA" },
-    { name: "JAKARTA TUG 1", mmsi: "525029011", lat: -6.02, lon: 106.75, sog: 3.2, cog: 180, type: 31, dest: "TG PRIOK" },
-    { name: "SERIBU EXPRESS", mmsi: "525049922", lat: -5.98, lon: 106.70, sog: 24.5, cog: 330, type: 60, dest: "PULAU TIDUNG" },
-    { name: "PELNI SINABUNG", mmsi: "525110992", lat: -6.09, lon: 106.95, sog: 14.5, cog: 10, type: 60, dest: "MAKASSAR" },
+    {
+      name: "DHARMA FERRY VII",
+      mmsi: "525003112",
+      lat: -6.08,
+      lon: 106.85,
+      sog: 11.2,
+      cog: 350,
+      type: 60,
+      dest: "SURABAYA",
+    },
+    {
+      name: "JAKARTA TUG 1",
+      mmsi: "525029011",
+      lat: -6.02,
+      lon: 106.75,
+      sog: 3.2,
+      cog: 180,
+      type: 31,
+      dest: "TG PRIOK",
+    },
+    {
+      name: "SERIBU EXPRESS",
+      mmsi: "525049922",
+      lat: -5.98,
+      lon: 106.7,
+      sog: 24.5,
+      cog: 330,
+      type: 60,
+      dest: "PULAU TIDUNG",
+    },
+    {
+      name: "PELNI SINABUNG",
+      mmsi: "525110992",
+      lat: -6.09,
+      lon: 106.95,
+      sog: 14.5,
+      cog: 10,
+      type: 60,
+      dest: "MAKASSAR",
+    },
   ],
 };
 
@@ -102,8 +292,6 @@ export default function TrackShipPage() {
   const setActiveApiUrl = useMarineStore((state) => state.setActiveApiUrl);
 
   // AIS Stream states & actions
-  const aisApiKey = useMarineStore((state) => state.aisApiKey);
-  const setAisApiKey = useMarineStore((state) => state.setAisApiKey);
   const aisStatus = useMarineStore((state) => state.aisStatus);
   const setAisStatus = useMarineStore((state) => state.setAisStatus);
   const aisError = useMarineStore((state) => state.aisError);
@@ -113,7 +301,9 @@ export default function TrackShipPage() {
   const aisSelectedMmsi = useMarineStore((state) => state.aisSelectedMmsi);
   const selectAisVessel = useMarineStore((state) => state.selectAisVessel);
   const aisTrackingZone = useMarineStore((state) => state.aisTrackingZone);
-  const setAisTrackingZone = useMarineStore((state) => state.setAisTrackingZone);
+  const setAisTrackingZone = useMarineStore(
+    (state) => state.setAisTrackingZone,
+  );
   const aisLogs = useMarineStore((state) => state.aisLogs);
   const addAisLog = useMarineStore((state) => state.addAisLog);
   const clearAisLogs = useMarineStore((state) => state.clearAisLogs);
@@ -123,7 +313,6 @@ export default function TrackShipPage() {
 
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
   const [vesselFilter, setVesselFilter] = useState("");
   const [showAisLogs, setShowAisLogs] = useState(true);
 
@@ -197,10 +386,14 @@ export default function TrackShipPage() {
 
       setTimeout(() => {
         setAisStatus("connected");
-        addAisLog(`[System] Connected to Mock AIS Streamer (Zone: ${aisTrackingZone.toUpperCase()}).`);
+        addAisLog(
+          `[System] Connected to Mock AIS Streamer (Zone: ${aisTrackingZone.toUpperCase()}).`,
+        );
 
         // Load starting presets
-        const startPresets = MOCK_VESSELS_PRESETS[aisTrackingZone] || MOCK_VESSELS_PRESETS.singapore;
+        const startPresets =
+          MOCK_VESSELS_PRESETS[aisTrackingZone] ||
+          MOCK_VESSELS_PRESETS.singapore;
         const initialVessels: Record<string, VesselData> = {};
 
         startPresets.forEach((p) => {
@@ -218,7 +411,9 @@ export default function TrackShipPage() {
           };
           initialVessels[p.mmsi] = v;
           updateAisVessel(v);
-          addAisLog(`[AIS] Stream detected: Vessel ${v.name} (MMSI: ${v.mmsi})`);
+          addAisLog(
+            `[AIS] Stream detected: Vessel ${v.name} (MMSI: ${v.mmsi})`,
+          );
         });
 
         localMockVesselsRef.current = initialVessels;
@@ -234,7 +429,7 @@ export default function TrackShipPage() {
 
           const rad = (v.cog * Math.PI) / 180;
           // Scale movement drift visually
-          const driftFactor = 0.0001; 
+          const driftFactor = 0.0001;
           const dLat = Math.cos(rad) * v.sog * driftFactor;
           const dLon = Math.sin(rad) * v.sog * driftFactor;
 
@@ -244,7 +439,7 @@ export default function TrackShipPage() {
           if (newCog >= 360) newCog -= 360;
 
           // Minor speed adjustments
-          let newSog = Math.max(0.5, v.sog + (Math.random() * 1.6 - 0.8));
+          const newSog = Math.max(0.5, v.sog + (Math.random() * 1.6 - 0.8));
 
           const updatedVessel: VesselData = {
             ...v,
@@ -258,24 +453,31 @@ export default function TrackShipPage() {
 
           localMockVesselsRef.current[randomMmsi] = updatedVessel;
           updateAisVessel(updatedVessel);
-          addAisLog(`[AIS] Msg ID 1 (PosReport): ${updatedVessel.name} (${updatedVessel.mmsi}) | Lat: ${updatedVessel.latitude}, Lon: ${updatedVessel.longitude} | Speed: ${updatedVessel.sog} kn | Heading: ${updatedVessel.cog}°`);
+          addAisLog(
+            `[AIS] Msg ID 1 (PosReport): ${updatedVessel.name} (${updatedVessel.mmsi}) | Lat: ${updatedVessel.latitude}, Lon: ${updatedVessel.longitude} | Speed: ${updatedVessel.sog} kn | Heading: ${updatedVessel.cog}°`,
+          );
         }, 1200);
-
       }, 1000);
     } else {
       // Connect via backend SSE proxy (AISstream blocks direct browser connections)
       if (!SHARED_AIS_KEY) {
         setAisStatus("error");
-        setAisError("Shared API Key is missing. Please add NEXT_PUBLIC_AISSTREAM_API_KEY to your .env.local file and restart the server.");
-        addAisLog("[System Error] API Key missing. Please configure NEXT_PUBLIC_AISSTREAM_API_KEY in .env.local.");
+        setAisError(
+          "Shared API Key is missing. Please add NEXT_PUBLIC_AISSTREAM_API_KEY to your .env.local file and restart the server.",
+        );
+        addAisLog(
+          "[System Error] API Key missing. Please configure NEXT_PUBLIC_AISSTREAM_API_KEY in .env.local.",
+        );
         return;
       }
 
-      let backendUrl = activeApiUrl;
+      const backendUrl = activeApiUrl;
       if (!backendUrl) {
         setAisStatus("error");
         setAisError("Backend API is offline. Cannot proxy AIS stream.");
-        addAisLog("[System Error] Backend API not reachable. Start the FastAPI server.");
+        addAisLog(
+          "[System Error] Backend API not reachable. Start the FastAPI server.",
+        );
         return;
       }
 
@@ -283,7 +485,8 @@ export default function TrackShipPage() {
       setAisError(null);
       addAisLog("[System] Connecting to AIS stream via backend proxy...");
 
-      const targetZone = ZONE_PRESETS[aisTrackingZone] ?? ZONE_PRESETS.singapore;
+      const targetZone =
+        ZONE_PRESETS[aisTrackingZone] ?? ZONE_PRESETS.singapore;
       const [[minLat, minLon], [maxLat, maxLon]] = targetZone.bounds;
       const params = new URLSearchParams({
         api_key: SHARED_AIS_KEY,
@@ -296,9 +499,13 @@ export default function TrackShipPage() {
       const controller = new AbortController();
       sseAbortRef.current = controller;
 
-      addAisLog(`[System] Subscribing to zone: ${targetZone.name} | Bounds: [[${minLat},${minLon}],[${maxLat},${maxLon}]]`);
+      addAisLog(
+        `[System] Subscribing to zone: ${targetZone.name} | Bounds: [[${minLat},${minLon}],[${maxLat},${maxLon}]]`,
+      );
 
-      fetch(`${backendUrl}/api/ais/stream?${params}`, { signal: controller.signal })
+      fetch(`${backendUrl}/api/ais/stream?${params}`, {
+        signal: controller.signal,
+      })
         .then(async (res) => {
           if (!res.ok || !res.body) {
             throw new Error(`Proxy returned ${res.status}`);
@@ -338,18 +545,34 @@ export default function TrackShipPage() {
                 const lon = meta.longitude;
                 if (lat === undefined || lon === undefined) continue;
 
-                let sog = 0, cog = 0, heading = 0, destination = "", shipType = 0;
-                if (msgType === "PositionReport" && data.Message?.PositionReport) {
+                let sog = 0,
+                  cog = 0,
+                  heading = 0,
+                  destination = "",
+                  shipType = 0;
+                if (
+                  msgType === "PositionReport" &&
+                  data.Message?.PositionReport
+                ) {
                   sog = data.Message.PositionReport.Sog || 0;
                   cog = data.Message.PositionReport.Cog || 0;
                   heading = data.Message.PositionReport.TrueHeading || 0;
-                } else if (msgType === "ShipStaticData" && data.Message?.ShipStaticData) {
-                  destination = data.Message.ShipStaticData.Destination?.trim() || "";
+                } else if (
+                  msgType === "ShipStaticData" &&
+                  data.Message?.ShipStaticData
+                ) {
+                  destination =
+                    data.Message.ShipStaticData.Destination?.trim() || "";
                   shipType = data.Message.ShipStaticData.Type || 0;
                 }
 
                 const parsedVessel: Partial<VesselData> & { mmsi: string } = {
-                  mmsi, name, latitude: lat, longitude: lon, sog, cog,
+                  mmsi,
+                  name,
+                  latitude: lat,
+                  longitude: lon,
+                  sog,
+                  cog,
                   heading: heading || cog,
                   lastUpdated: meta.time_utc || new Date().toISOString(),
                 };
@@ -357,7 +580,9 @@ export default function TrackShipPage() {
                 if (shipType) parsedVessel.shipType = shipType;
 
                 updateAisVessel(parsedVessel);
-                addAisLog(`[Live AIS] ${msgType} | ${name} (${mmsi}) | Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`);
+                addAisLog(
+                  `[Live AIS] ${msgType} | ${name} (${mmsi}) | Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`,
+                );
               } catch {
                 // skip malformed line
               }
@@ -366,14 +591,23 @@ export default function TrackShipPage() {
           setAisStatus("disconnected");
           addAisLog("[System] SSE stream ended.");
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           if (err.name === "AbortError") return;
           setAisStatus("error");
           setAisError(err.message || "SSE proxy connection failed.");
           addAisLog(`[System Error] ${err.message}`);
         });
     }
-  }, [aisDemoMode, aisApiKey, aisTrackingZone, activeApiUrl, updateAisVessel, addAisLog, clearAisVessels, setAisStatus, setAisError]);
+  }, [
+    aisDemoMode,
+    aisTrackingZone,
+    activeApiUrl,
+    updateAisVessel,
+    addAisLog,
+    clearAisVessels,
+    setAisStatus,
+    setAisError,
+  ]);
 
   const handleAisDisconnect = useCallback(() => {
     if (sseAbortRef.current) {
@@ -453,10 +687,12 @@ export default function TrackShipPage() {
         body: JSON.stringify({ message: userRawText }),
       });
 
-      if (!response.ok) throw new Error(`Marine API returned ${response.status}`);
+      if (!response.ok)
+        throw new Error(`Marine API returned ${response.status}`);
 
       const data: ChatApiResponse = await response.json();
-      const botText = data.markdown || data.response?.content || "No response received.";
+      const botText =
+        data.markdown || data.response?.content || "No response received.";
 
       setMessages((prev) => [
         ...prev,
@@ -470,7 +706,7 @@ export default function TrackShipPage() {
 
       let coordinates = data.coordinates;
       let path = data.path;
-      let altRoutes = data.alternativeRoutes || [];
+      const altRoutes = data.alternativeRoutes || [];
 
       if ((!coordinates || coordinates.length === 0) && data.mapUrl) {
         try {
@@ -530,7 +766,10 @@ export default function TrackShipPage() {
       {/* Header */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+          >
             <div className="p-2 bg-blue-600 rounded-lg text-white">
               <Ship className="h-5 w-5 animate-pulse" />
             </div>
@@ -581,7 +820,6 @@ export default function TrackShipPage() {
 
       {/* Main Layout Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col lg:flex-row gap-6">
-        
         {/* Left Map Content Panel */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[480px] lg:h-[580px]">
@@ -589,7 +827,9 @@ export default function TrackShipPage() {
             <div className="p-4 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Compass className="h-5 w-5 text-blue-400" />
-                <span className="font-semibold text-sm">Interactive Navigation Map</span>
+                <span className="font-semibold text-sm">
+                  Interactive Navigation Map
+                </span>
               </div>
               <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-850">
                 <button
@@ -626,19 +866,33 @@ export default function TrackShipPage() {
             {mapType === "route" ? (
               <>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Departure Port</span>
-                  <span className="text-sm font-semibold text-white mt-1">Port Klang (MY)</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Departure Port
+                  </span>
+                  <span className="text-sm font-semibold text-white mt-1">
+                    Port Klang (MY)
+                  </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Destination Port</span>
-                  <span className="text-sm font-semibold text-white mt-1">Singapore (SG)</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Destination Port
+                  </span>
+                  <span className="text-sm font-semibold text-white mt-1">
+                    Singapore (SG)
+                  </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Waypoints</span>
-                  <span className="text-sm font-semibold text-white mt-1">{routeCoordinates.length} Points</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Waypoints
+                  </span>
+                  <span className="text-sm font-semibold text-white mt-1">
+                    {routeCoordinates.length} Points
+                  </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Optimal Route Status</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Optimal Route Status
+                  </span>
                   <span className="text-xs font-bold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full w-fit mt-1">
                     Ready
                   </span>
@@ -647,36 +901,48 @@ export default function TrackShipPage() {
             ) : (
               <>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">AIS connection</span>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full w-fit mt-1 border ${
-                    aisStatus === "connected"
-                      ? "bg-green-500/10 text-green-400 border-green-500/20 animate-pulse"
-                      : aisStatus === "connecting"
-                        ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
-                  }`}>
+                  <span className="text-xs text-slate-400 font-medium">
+                    AIS connection
+                  </span>
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full w-fit mt-1 border ${
+                      aisStatus === "connected"
+                        ? "bg-green-500/10 text-green-400 border-green-500/20 animate-pulse"
+                        : aisStatus === "connecting"
+                          ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                          : "bg-red-500/10 text-red-400 border-red-500/20"
+                    }`}
+                  >
                     {aisStatus.toUpperCase()}
                   </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Tracked Vessels</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Tracked Vessels
+                  </span>
                   <span className="text-sm font-semibold text-white mt-1">
                     {Object.keys(aisVessels).length} in scope
                   </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Tracking Preset</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Tracking Preset
+                  </span>
                   <span className="text-sm font-semibold text-white mt-1 capitalize">
                     {aisTrackingZone}
                   </span>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Feed Mode</span>
-                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full w-fit mt-1 border ${
-                    aisDemoMode 
-                      ? "bg-purple-500/10 text-purple-400 border-purple-500/20" 
-                      : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                  }`}>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Feed Mode
+                  </span>
+                  <span
+                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full w-fit mt-1 border ${
+                      aisDemoMode
+                        ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                    }`}
+                  >
                     {aisDemoMode ? "Simulated Demo" : "Live Stream"}
                   </span>
                 </div>
@@ -687,14 +953,15 @@ export default function TrackShipPage() {
 
         {/* Right Console Panel (Chatbot or AIS Stream Controller) */}
         <div className="w-full lg:w-[420px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl h-[600px] lg:h-[680px]">
-          
           {mapType === "route" ? (
             /* Chatbot Mode Panel */
             <>
               <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-blue-400" />
-                  <span className="font-semibold text-sm text-slate-200">Marine AI Assistant</span>
+                  <span className="font-semibold text-sm text-slate-200">
+                    Marine AI Assistant
+                  </span>
                 </div>
                 <button
                   onClick={resetChat}
@@ -769,7 +1036,10 @@ export default function TrackShipPage() {
               </div>
 
               {/* Chat Send Form */}
-              <form onSubmit={handleSendMessage} className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
+              <form
+                onSubmit={handleSendMessage}
+                className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2"
+              >
                 <input
                   type="text"
                   value={inputValue}
@@ -789,30 +1059,37 @@ export default function TrackShipPage() {
           ) : (
             /* Real-Time AIS Tracker Console Deck */
             <div className="flex-1 flex flex-col overflow-hidden">
-              
               {/* AIS Deck Title */}
               <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sliders className="h-5 w-5 text-blue-400" />
-                  <span className="font-semibold text-sm text-slate-200 font-sans">AIS Streaming Console</span>
+                  <span className="font-semibold text-sm text-slate-200 font-sans">
+                    AIS Streaming Console
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={`h-2.5 w-2.5 rounded-full ${
-                    aisStatus === "connected" ? "bg-green-500 animate-pulse" : "bg-red-500"
-                  }`} />
-                  <span className="text-xs text-slate-400 font-mono capitalize">{aisStatus}</span>
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      aisStatus === "connected"
+                        ? "bg-green-500 animate-pulse"
+                        : "bg-red-500"
+                    }`}
+                  />
+                  <span className="text-xs text-slate-400 font-mono capitalize">
+                    {aisStatus}
+                  </span>
                 </div>
               </div>
 
               {/* Scrollable Control Panels Section */}
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-slate-950/20">
-                
                 {/* Connection Setup Card */}
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-3">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Key className="h-3.5 w-3.5 text-blue-400" /> Connection Credentials
+                    <Key className="h-3.5 w-3.5 text-blue-400" /> Connection
+                    Credentials
                   </h3>
-                  
+
                   {/* Demo Mode Toggle */}
                   <label className="flex items-center justify-between cursor-pointer py-1 select-none">
                     <span className="text-xs font-medium text-slate-200">
@@ -833,8 +1110,12 @@ export default function TrackShipPage() {
                   {!aisDemoMode && (
                     <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-slate-200">AISstream API Key</span>
-                        <span className="text-[10px] text-slate-500">Managed via Environment</span>
+                        <span className="text-xs font-semibold text-slate-200">
+                          AISstream API Key
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          Managed via Environment
+                        </span>
                       </div>
                       {SHARED_AIS_KEY ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-950/40 text-green-400 border border-green-900/60">
@@ -862,7 +1143,10 @@ export default function TrackShipPage() {
                       disabled={aisStatus === "connecting"}
                       className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2"
                     >
-                      <Play className="h-3.5 w-3.5" /> {aisStatus === "connecting" ? "Connecting..." : "Connect Stream"}
+                      <Play className="h-3.5 w-3.5" />{" "}
+                      {aisStatus === "connecting"
+                        ? "Connecting..."
+                        : "Connect Stream"}
                     </button>
                   )}
 
@@ -877,14 +1161,15 @@ export default function TrackShipPage() {
                 {/* Preset Strait Bounds Card */}
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                    <MapPin className="h-3.5 w-3.5 text-blue-400" /> Strait presets scope
+                    <MapPin className="h-3.5 w-3.5 text-blue-400" /> Strait
+                    presets scope
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(ZONE_PRESETS).map(([key, zone]) => (
                       <button
                         key={key}
                         onClick={() => {
-                          setAisTrackingZone(key as any);
+                          setAisTrackingZone(key as "singapore" | "sunda" | "malacca" | "jakarta" | "custom");
                           selectAisVessel(null); // Clear selections
                         }}
                         className={`p-2 rounded-lg text-left text-xs font-semibold transition-all border ${
@@ -903,7 +1188,8 @@ export default function TrackShipPage() {
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-3 min-h-[220px] max-h-[300px]">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Anchor className="h-3.5 w-3.5 text-blue-400" /> Vessel scope explorer
+                      <Anchor className="h-3.5 w-3.5 text-blue-400" /> Vessel
+                      scope explorer
                     </h3>
                     <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-950 text-slate-400 rounded-full border border-slate-850">
                       {filteredVessels.length} found
@@ -926,7 +1212,9 @@ export default function TrackShipPage() {
                   <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 scrollbar-thin">
                     {filteredVessels.length === 0 ? (
                       <div className="text-center py-6 text-xs text-slate-500">
-                        {aisStatus !== "connected" ? "Connect feed to stream vessels" : "No matching vessels tracked"}
+                        {aisStatus !== "connected"
+                          ? "Connect feed to stream vessels"
+                          : "No matching vessels tracked"}
                       </div>
                     ) : (
                       filteredVessels.map((vessel) => (
@@ -943,11 +1231,17 @@ export default function TrackShipPage() {
                             <div className="font-bold text-xs truncate flex items-center gap-1.5">
                               🚢 {vessel.name}
                             </div>
-                            <div className="text-[10px] text-slate-500 mt-0.5">MMSI: {vessel.mmsi}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              MMSI: {vessel.mmsi}
+                            </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-xs font-semibold text-emerald-400 block">{vessel.sog} kn</span>
-                            <span className="text-[9px] text-slate-500 block font-mono">{vessel.cog}° COG</span>
+                            <span className="text-xs font-semibold text-emerald-400 block">
+                              {vessel.sog} kn
+                            </span>
+                            <span className="text-[9px] text-slate-500 block font-mono">
+                              {vessel.cog}° COG
+                            </span>
                           </div>
                         </div>
                       ))
@@ -964,32 +1258,55 @@ export default function TrackShipPage() {
                     <div className="flex items-center gap-2">
                       <Ship className="h-5 w-5 text-blue-400 shrink-0" />
                       <div className="min-w-0">
-                        <h4 className="font-extrabold text-sm text-white truncate pr-6">{selectedVessel.name}</h4>
-                        <p className="text-[10px] text-blue-300/80">Active Voyage details</p>
+                        <h4 className="font-extrabold text-sm text-white truncate pr-6">
+                          {selectedVessel.name}
+                        </h4>
+                        <p className="text-[10px] text-blue-300/80">
+                          Active Voyage details
+                        </p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-t border-blue-900/30 pt-3">
                       <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-bold">MMSI Code</span>
-                        <span className="font-semibold font-mono">{selectedVessel.mmsi}</span>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                          MMSI Code
+                        </span>
+                        <span className="font-semibold font-mono">
+                          {selectedVessel.mmsi}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Ship Speed</span>
-                        <span className="font-semibold text-emerald-400">{selectedVessel.sog} knots</span>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                          Ship Speed
+                        </span>
+                        <span className="font-semibold text-emerald-400">
+                          {selectedVessel.sog} knots
+                        </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Course / Heading</span>
-                        <span className="font-semibold">{selectedVessel.cog}° / {selectedVessel.heading}°</span>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                          Course / Heading
+                        </span>
+                        <span className="font-semibold">
+                          {selectedVessel.cog}° / {selectedVessel.heading}°
+                        </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Destination</span>
-                        <span className="font-semibold truncate block text-blue-300">{selectedVessel.destination || "Not reported"}</span>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                          Destination
+                        </span>
+                        <span className="font-semibold truncate block text-blue-300">
+                          {selectedVessel.destination || "Not reported"}
+                        </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Current Coordinates</span>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                          Current Coordinates
+                        </span>
                         <span className="font-semibold font-mono text-[11px] block mt-0.5">
-                          Lat: {selectedVessel.latitude.toFixed(5)}, Lon: {selectedVessel.longitude.toFixed(5)}
+                          Lat: {selectedVessel.latitude.toFixed(5)}, Lon:{" "}
+                          {selectedVessel.longitude.toFixed(5)}
                         </span>
                       </div>
                     </div>
@@ -1028,7 +1345,9 @@ export default function TrackShipPage() {
                     >
                       Clear
                     </button>
-                    <span className="text-[10px] text-slate-500">{showAisLogs ? "▼ Hide" : "▲ Show"}</span>
+                    <span className="text-[10px] text-slate-500">
+                      {showAisLogs ? "▼ Hide" : "▲ Show"}
+                    </span>
                   </div>
                 </div>
 
@@ -1038,10 +1357,15 @@ export default function TrackShipPage() {
                       <div ref={logTerminalEndRef} />
                       {aisLogs.map((log, idx) => {
                         let color = "text-emerald-400";
-                        if (log.includes("[System Error]")) color = "text-red-500 font-bold";
-                        else if (log.includes("[System]")) color = "text-yellow-400";
+                        if (log.includes("[System Error]"))
+                          color = "text-red-500 font-bold";
+                        else if (log.includes("[System]"))
+                          color = "text-yellow-400";
                         return (
-                          <div key={idx} className={`${color} break-all truncate`}>
+                          <div
+                            key={idx}
+                            className={`${color} break-all truncate`}
+                          >
                             {log}
                           </div>
                         );
@@ -1050,10 +1374,8 @@ export default function TrackShipPage() {
                   </div>
                 )}
               </div>
-
             </div>
           )}
-
         </div>
       </main>
     </div>
