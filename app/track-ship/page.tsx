@@ -36,7 +36,7 @@ interface ChatApiResponse {
   markdown?: string;
   path?: string[];
   coordinates?: [number, number][];
-  alternative_routes?: AlternativeRoute[];
+  alternativeRoutes?: AlternativeRoute[];
   mapUrl?: string;
   mapHtml?: string;
 }
@@ -490,7 +490,7 @@ export default function TrackShipPage() {
 
       let coordinates = data.coordinates;
       let path = data.path;
-      let altRoutes = data.alternative_routes || [];
+      let altRoutes = data.alternativeRoutes || [];
 
       if ((!coordinates || coordinates.length === 0) && data.mapUrl) {
         try {
