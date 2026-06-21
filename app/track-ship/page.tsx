@@ -39,7 +39,7 @@ interface ChatApiResponse {
   mapHtml?: string;
 }
 
-const SHARED_AIS_KEY = process.env.NEXT_PUBLIC_AISSTREAM_API_KEY || "";
+// AISStream key is now managed securely on the backend environment.
 
 const API_CANDIDATES = [
   process.env.NEXT_PUBLIC_MARINE_API_URL,
@@ -315,6 +315,7 @@ export default function TrackShipPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [vesselFilter, setVesselFilter] = useState("");
   const [showAisLogs, setShowAisLogs] = useState(true);
+  const [isBackendAisKeyConfigured, setIsBackendAisKeyConfigured] = useState<boolean | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const logTerminalEndRef = useRef<HTMLDivElement>(null);
@@ -358,6 +359,29 @@ export default function TrackShipPage() {
     const interval = setInterval(probeApi, 30_000);
     return () => clearInterval(interval);
   }, [probeApi]);
+
+  useEffect(() => {
+    if (!activeApiUrl) {
+      setIsBackendAisKeyConfigured(null);
+      return;
+    }
+    let active = true;
+    fetch(`${activeApiUrl}/api/ais/config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) {
+          setIsBackendAisKeyConfigured(!!data.configured);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setIsBackendAisKeyConfigured(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [activeApiUrl]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -460,13 +484,13 @@ export default function TrackShipPage() {
       }, 1000);
     } else {
       // Connect via backend SSE proxy (AISstream blocks direct browser connections)
-      if (!SHARED_AIS_KEY) {
+      if (isBackendAisKeyConfigured === false) {
         setAisStatus("error");
         setAisError(
-          "Shared API Key is missing. Please add NEXT_PUBLIC_AISSTREAM_API_KEY to your .env.local file and restart the server.",
+          "AISStream API Key is missing on the server. Please add AISSTREAM_API_KEY to your backend .env file.",
         );
         addAisLog(
-          "[System Error] API Key missing. Please configure NEXT_PUBLIC_AISSTREAM_API_KEY in .env.local.",
+          "[System Error] API Key missing on backend. Please configure AISSTREAM_API_KEY in the backend's .env file.",
         );
         return;
       }
@@ -489,7 +513,6 @@ export default function TrackShipPage() {
         ZONE_PRESETS[aisTrackingZone] ?? ZONE_PRESETS.singapore;
       const [[minLat, minLon], [maxLat, maxLon]] = targetZone.bounds;
       const params = new URLSearchParams({
-        api_key: SHARED_AIS_KEY,
         min_lat: String(minLat),
         min_lon: String(minLon),
         max_lat: String(maxLat),
@@ -1117,13 +1140,13 @@ export default function TrackShipPage() {
                           Managed via Environment
                         </span>
                       </div>
-                      {SHARED_AIS_KEY ? (
+                      {isBackendAisKeyConfigured ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-950/40 text-green-400 border border-green-900/60">
                           Active
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-950/40 text-red-400 border border-red-900/60 animate-pulse">
-                          Missing
+                          {isBackendAisKeyConfigured === null ? "Checking..." : "Missing"}
                         </span>
                       )}
                     </div>
