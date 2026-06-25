@@ -16,7 +16,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/track-ship" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <Link href="/chat" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
               Interactive Dashboard
             </Link>
           </div>
@@ -40,7 +40,7 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mt-2">
           <Link
-            href="/track-ship"
+            href="/chat"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-sm font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/35 transition-all"
           >
             💬 Open Navigation Chatbot

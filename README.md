@@ -1,142 +1,108 @@
-# 🚢 Marine Navigation Assistant - Panduan Setup & Penggunaan (Frontend)
+# 🚢 Marine Navigation Assistant - Setup & Usage Guide (Frontend)
 
-Selamat datang! Panduan ini dirancang khusus untuk membantu Anda yang **tidak memiliki latar belakang pemrograman (non-programmer)** untuk menjalankan dan menggunakan aplikasi web **Marine Navigation Assistant** di komputer lokal Anda.
-
----
-
-## 📋 Daftar Isi
-1. [Prasyarat: Apa yang Perlu Diinstal?](#1-prasyarat-apa-yang-perlu-diinstal)
-2. [Langkah 1: Mengunduh & Memasang Node.js](#langkah-2-mengunduh--memasang-nodejs)
-3. [Langkah 2: Menyiapkan File Konfigurasi (.env.local)](#langkah-3-menyiapkan-file-konfigurasi-envlocal)
-4. [Langkah 3: Menginstal Paket Pendukung](#langkah-4-menginstal-paket-pendukung)
-5. [Langkah 4: Menjalankan Aplikasi](#langkah-5-menjalankan-aplikasi)
-6. [🗺️ Cara Penggunaan Fitur Utama](#-cara-penggunaan-fitur-utama)
-7. [⚠️ Penyelesaian Masalah (Troubleshooting)](#%EF%B8%8F-penyelesaian-masalah-troubleshooting)
+Welcome! This guide is specifically designed to help those of you with no programming background (non-programmers) run and use the Marine Navigation Assistant web application on your local computer.
 
 ---
 
-## 1. Prasyarat: Apa yang Perlu Diinstal?
-
-Sebelum menjalankan aplikasi, pastikan komputer Anda memiliki:
-* **Node.js** (Minimal versi 18.0 atau lebih baru) - Ini adalah motor utama yang menjalankan server frontend di komputer Anda.
-* **Terminal / Command Prompt** - Aplikasi bawaan komputer untuk mengetik perintah ringkas.
-  * Di **Windows**: Gunakan **Command Prompt (CMD)** atau **PowerShell**.
-  * Di **macOS / Linux**: Gunakan **Terminal**.
-
----
-
-## Langkah 1: Mengunduh & Memasang Node.js
-
-Jika Anda belum menginstal Node.js pada komputer Anda, ikuti langkah berikut:
-
-1. Buka browser (Chrome/Edge/Safari) dan kunjungi situs resmi: [https://nodejs.org/](https://nodejs.org/)
-2. Unduh versi **LTS (Long Term Support)** yang direkomendasikan untuk sebagian besar pengguna karena paling stabil.
-3. Buka file hasil unduhan tersebut dan ikuti petunjuk instalasi sampai selesai (klik *Next* / *Continue* / *Pasang* hingga selesai).
-4. Untuk memastikan Node.js sudah terpasang dengan benar:
-   * Buka **Command Prompt (Windows)** atau **Terminal (Mac)**.
-   * Ketik perintah berikut lalu tekan **Enter**:
-     ```bash
-     node -v
-     ```
-   * Jika muncul angka versi (misalnya `v20.11.0`), berarti Node.js telah berhasil diinstal dan siap digunakan!
+## 📋 Table of Contents
+1. [Prerequisites: What Needs to be Installed?] (#1-prerequisites-what-needs-to-be-installed)
+2. [Step 1: Downloading & Installing Node.js] (#step-2-downloading--installing-nodejs)
+3. [Step 2: Setting Up the Configuration File (.env.local)] (#step-3-setting-up-the-envlocal-configuration-file)
+4. [Step 3: Installing Supporting Packages] (#step-4-installing-supporting-packages)
+5. [Step 4: Running the Application] (#step-5-running-the-application)
+6. [🗺️ How to Use Key Features] (#-how-to-use-key-features)
+7. [⚠️ Troubleshooting (Troubleshooting)](#%EF%B8%8F-troubleshooting-problem-solving)
 
 ---
 
-## Langkah 2: Menyiapkan File Konfigurasi (.env.local)
+## 1. Prerequisites: What Needs to be Installed?
 
-Aplikasi memerlukan beberapa kunci pengaturan (kredensial) agar dapat terhubung dengan database Supabase dan server kecerdasan buatan (FastAPI) di backend.
+Before running the application, make sure your computer has:
+* Node.js (Minimum version 18.0 or later) - This is the main engine that runs the frontend server on your computer.
+* Terminal / Command Prompt - Your computer's default application for typing concise commands.
+* On Windows: Use Command Prompt (CMD) or PowerShell.
+* On macOS / Linux: Use Terminal.
 
-1. Buka folder **`frontend`** melalui File Explorer (Windows) atau Finder (Mac) Anda.
-2. Cari file bernama **`.env.example`**.
-3. **Salin (Copy)** file tersebut, lalu **Tempel (Paste)** di folder yang sama sehingga menghasilkan file duplikat.
-4. Ubah nama file salinan tersebut menjadi **`.env.local`** (pastikan tanda titik di awal nama file tetap ada).
-5. Buka file **`.env.local`** menggunakan aplikasi **Notepad**, **TextEdit**, atau editor teks lainnya, lalu sesuaikan isinya:
+---
+
+## Step 1: Downloading & Installing Node.js
+
+If you don't have Node.js installed on your computer, follow these steps:
+
+1. Open a browser (Chrome/Edge/Safari) and visit the official website: [https://nodejs.org/](https://nodejs.org/)
+2. Download the **LTS (Long Term Support)** version, which is recommended for most users because it is the most stable.
+3. Open the downloaded file and follow the installation instructions until complete (click *Next* / *Continue* / *Install* until complete).
+4. To ensure Node.js is installed correctly:
+* Open **Command Prompt (Windows)** or **Terminal (Mac)**.
+* Type the following command and press **Enter**:
+```bash
+node -v
+```
+* If a version number appears (e.g., `v20.11.0`), Node.js has been successfully installed and is ready to use!
+
+---
+
+## Step 2: Preparing the Configuration File (.env.local)
+
+The application requires some configuration keys (credentials) to connect to the Supabase database and the artificial intelligence server (FastAPI) on the backend.
+
+1. Open the **`frontend`** folder using File Explorer (Windows) or Finder (Mac).
+2. Locate the file named **`.env.example`**.
+3. **Copy** the file and then **Paste** it into the same folder to create a duplicate file.
+4. Rename the copied file to **`.env.local`** (make sure to keep the dot at the beginning of the file name).
+
+5. Open the **`.env.local`** file using **Notepad**, **TextEdit**, or another text editor, then adjust its contents:
 
 ```env
-# URL proyek Supabase Anda (bisa didapatkan di dashboard Supabase)
-NEXT_PUBLIC_SUPABASE_URL=https://proyek-anda.supabase.co
+# Your Supabase project URL (found in the Supabase dashboard)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 
-# Kunci API Anonim / Publishable Supabase Anda
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=kunci-anon-supabase-anda
+# Your Supabase Anonymous / Publishable API Key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-anonymous-key
 
-# Alamat server backend Kecerdasan Buatan (FastAPI)
-# Default-nya adalah http://127.0.0.1:8000 jika backend dijalankan di komputer lokal Anda
+# Artificial Intelligence (FastAPI) backend server address
+# Default is http://127.0.0.1:8000 if the backend is running on your local computer
 NEXT_PUBLIC_MARINE_API_URL=http://127.0.0.1:8000
 ```
-6. Simpan file tersebut (**Ctrl + S** di Windows atau **Cmd + S** di Mac).
+6. Save the file (Ctrl + S on Windows or Cmd + S on Mac).
 
 ---
 
-## Langkah 3: Menginstal Paket Pendukung
+## Step 3: Installing Supporting Packages
 
-Langkah ini dilakukan untuk mengunduh modul-modul pustaka yang dibutuhkan aplikasi agar dapat berjalan dengan sempurna.
+This step is necessary to download the library modules required for the application to run properly.
 
-1. Buka **Command Prompt** (Windows) atau **Terminal** (Mac).
-2. Arahkan ke folder `frontend` proyek ini.
-   > 💡 **Tips Cepat untuk Windows**: Buka folder `frontend` di File Explorer, klik pada kolom alamat (Address Bar) di bagian atas, ketik `cmd`, lalu tekan **Enter**. Jendela Command Prompt akan langsung terbuka di folder yang tepat.
-3. Ketik perintah berikut lalu tekan **Enter**:
-   ```bash
-   npm install
-   ```
-4. Tunggu hingga proses pengunduhan selesai (biasanya memakan waktu 1–3 menit tergantung kecepatan internet Anda). Proses ini akan membuat folder baru bernama `node_modules` di dalam direktori `frontend` Anda.
-
----
-
-## Langkah 4: Menjalankan Aplikasi
-
-Setelah semua persiapan selesai, Anda dapat langsung menyalakan server lokal aplikasi:
-
-1. Di Command Prompt / Terminal yang sama, ketik perintah:
-   ```bash
-   npm run dev
-   ```
-2. Jika berhasil, Anda akan melihat teks berwarna hijau/putih seperti ini:
-   ```text
-   ▲ Next.js 15.3.1
-   - Local:        http://localhost:3000
-   - Network:      http://192.168.1.10:3000
-   ```
-3. Buka browser Anda (Google Chrome, Microsoft Edge, Safari, dll.), lalu ketik alamat berikut di kolom pencarian:
-   👉 **[http://localhost:3000](http://localhost:3000)**
-4. Selamat! Aplikasi **Marine Navigation Assistant** sudah berjalan di komputer lokal Anda dan siap digunakan.
+1. Open Command Prompt (Windows) or Terminal (Mac).
+2. Navigate to the project's `frontend` folder.
+> 💡 **Quick Tip for Windows**: Open the `frontend` folder in File Explorer, click the address bar at the top, type `cmd`, and then press Enter. A Command Prompt window will open in the correct folder.
+3. Type the following command and press Enter:
+```bash
+npm install
+```
+4. Wait for the download to complete (usually takes 1–3 minutes depending on your internet speed). This will create a new folder named `node_modules` in your `frontend` directory.
 
 ---
 
-## 🗺️ Cara Penggunaan Fitur Utama
+## Step 4: Running the Application
 
-Setelah halaman aplikasi web terbuka di browser Anda, berikut adalah panduan penggunaannya:
+Once all preparations are complete, you can immediately start the application's local server:
 
-### 1. Navigasi Halaman Utama (Homepage)
-* Halaman ini menampilkan informasi ringkas mengenai kapabilitas sistem.
-* Terdapat tombol pintas **💬 Open Chatbot** dan **📡 Track a Ship** untuk berpindah fitur secara instan.
-
-### 2. Pelacakan Kapal & Analisis Rute (`/track-ship`)
-Halaman ini dapat diakses langsung tanpa perlu mendaftar/login:
-* **Interactive AIS Map (Peta Interaktif)**: Menampilkan rute kapal di peta laut.
-  * Anda dapat berpindah tab antara **Standard Route** (rute pelayaran standar) dan **Massive Route (Density)** (visualisasi kepadatan lalu lintas jalur laut) melalui tombol pilihan di atas peta.
-* **Marine AI Chatbot (Panel Obrolan Kanan)**: Asisten cerdas bertenaga AI untuk berinteraksi langsung. Anda dapat:
-  * Menggunakan tombol pintasan cepat seperti **Find Route** atau **AIS Info** di atas kolom input teks untuk mengirim perintah otomatis.
-  * Mengetik pertanyaan/perintah kustom di kolom input di bagian bawah (contoh: `"Tampilkan rute dari Jakarta ke Singapura"` atau `"Jelaskan kualitas data AIS rute ini"`).
-  * AI akan memproses perintah dan memperbarui peta di sebelah kiri secara dinamis berdasarkan rute laut yang disarankan!
-* **Status Dashboard (Bagian Bawah)**: Menampilkan ringkasan status pelayaran, pelabuhan keberangkatan, pelabuhan tujuan, jumlah koordinat yang dilacak, dan status saat ini (misalnya: *Completed*).
-
-### 3. Halaman Terproteksi (`/protected`)
-* Halaman khusus yang memerlukan pendaftaran/login akun Supabase terlebih dahulu.
-* Menampilkan informasi kredensial akun pengguna yang sedang aktif/login.
+1. In the same Command Prompt/Terminal, type the following command:
+```bash
+npm run dev
+```
+2. If successful, you will see green/white text like this:
+```text
+▲ Next.js 15.3.1
+- Local: http://localhost:3000
+- Network: http://192.168.1.10:3000
+```
+3. Open your browser (Google Chrome, Microsoft Edge, Safari, etc.), then type the following address in the search bar:
+👉 **[http://localhost:3000](http://localhost:3000)**
+4. Congratulations! The **Marine Navigation Assistant** application is now running on your local computer and is ready to use.
 
 ---
 
-## ⚠️ Penyelesaian Masalah (Troubleshooting)
+## 🗺️ How to Use Key Features
 
-Berikut beberapa kendala yang mungkin Anda temui beserta solusinya:
-
-| Gejala/Masalah | Penyebab Utama | Solusi |
-| :--- | :--- | :--- |
-| **Peta tidak muncul / Asisten AI membalas dengan pesan error koneksi** | Server backend FastAPI belum dijalankan. | Pastikan aplikasi backend di folder `/ml` sudah berjalan di alamat `http://127.0.0.1:8000`. Jika backend berjalan di alamat/port berbeda, sesuaikan nilai `NEXT_PUBLIC_MARINE_API_URL` di file `.env.local` Anda. |
-| **Error: "sh: next: command not found" saat menjalankan npm run dev** | Folder pustaka pendukung belum terinstal atau corrupt. | Jalankan kembali perintah `npm install` di terminal Anda dan pastikan koneksi internet stabil sampai selesai. |
-| **Halaman `/protected` mengarah ke halaman login** | Anda belum terdaftar / belum masuk. | Silakan buat akun baru atau masuk menggunakan fitur autentikasi (Sign Up/Sign In) yang telah disediakan di halaman login aplikasi. |
-| **Aplikasi tidak bisa diakses di browser dengan alamat localhost:3000** | Port `3000` sedang digunakan oleh program lain di komputer Anda. | Next.js akan mendeteksi ini dan otomatis memindahkan port (misalnya ke `http://localhost:3001`). Cek terminal Anda dan buka alamat localhost dengan nomor port baru yang tertera di sana. |
-
----
-
-🚢 **Marine Route Optimizer — Project SOF106**
+Once the web application page opens in your browser, here are the steps:
