@@ -41,11 +41,14 @@ interface ChatApiResponse {
 
 // AISStream key is now managed securely on the backend environment.
 
-const API_CANDIDATES = [
-  process.env.NEXT_PUBLIC_MARINE_API_URL,
-  "http://localhost:8000",
-  "https://marine-sof106.onrender.com",
-].filter(Boolean) as string[];
+const ENV_API_URL =
+  process.env.NEXT_PUBLIC_MARINE_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL;
+
+const API_CANDIDATES = Array.from(
+  new Set([ENV_API_URL, "http://localhost:8000"].filter(Boolean))
+) as string[];
 
 // Bounding box preset configurations
 const ZONE_PRESETS: Record<
